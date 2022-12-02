@@ -17,6 +17,7 @@ plugins {
 
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'maven'
+apply plugin: 'eclipse'
 
 // define the properties file
 ext.configFile = file "build.properties"
@@ -83,19 +84,7 @@ processResources {
 
 import groovy.io.FileType
 
-task changelog(type: JenkinsChangelog) {
-    outputs.upToDateWhen { false } // Refresh changelog for every build
-    def buildNumber = "${System.getenv().BUILD_NUMBER}"
 
-    serverRoot = 'http://ci.jenkins.minecraftforge.net/'
-    jobName = 'BiomesOPlenty'
-    authName = project.getProperty('forgeJenkinsUsername')
-    authPassword = project.getProperty('forgeJenkinsPassword')
-    targetBuild = buildNumber.toString()
-    output = 'build/libs/' + project.getName() + '-' + project.version + '-changelog.txt'
-}
-
-uploadArchives.dependsOn 'changelog'
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allJava
@@ -150,89 +139,7 @@ task listOutputs << {
 tasks.build.finalizedBy('listOutputs')
 
 artifacts {
-    archives changelog.output
     archives sourcesJar
     archives deobfJar
     archives apiJar
-}
-
-curseforge {
-    apiKey = project.getProperty('curseApiKey')
-    project {
-        id = '220318'
-        changelog = file('build/libs/' + project.getName() + '-' + project.version + '-changelog.txt')
-        releaseType = 'beta'
-    }
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-			if (project.hasProperty('forgeMavenPassword'))
-			{
-				repository(url: "https://files.minecraftforge.net/maven/manage/upload") {
-					authentication(userName: project.getProperty('forgeMavenUsername'), password: project.getProperty('forgeMavenPassword'))
-				}
-			}
-			else
-			{
-				// local repo folder. Might wanna juset use  gradle install   if you wanans end it to maven-local
-				repository(url: 'file://localhost/' + project.file('repo').getAbsolutePath())
-			}
-
-            pom {
-                groupId = project.group
-                version = project.version
-                artifactId = project.archivesBaseName
-                project {
-                    name project.archivesBaseName
-                    packaging 'jar'
-                    description 'Biomes O Plenty'
-                    url 'https://github.com/Glitchfiend/BiomesOPlenty'
-                
-                    scm {
-                        url 'https://github.com/Glitchfiend/BiomesOPlenty'
-                        connection 'scm:git:git://github.com/Glitchfiend/BiomesOPlenty.git'
-                        developerConnection 'scm:git:git@github.com:Glitchfiend/BiomesOPlenty.git'
-                    }
-                
-                    issueManagement {
-                        system 'github'
-                        url 'https://github.com/Glitchfiend/BiomesOPlenty/issues'
-                    }
-                
-                    licenses {
-                        license {
-                            name 'Creative Commons Attribution-NonCommercial-NoDerivs 4.0 International Public License'
-                            url 'http://creativecommons.org/licenses/by-nc-nd/4.0/'
-                            distribution 'repo'
-                        }
-                    }
-                
-                    developers {
-                        developer {
-                            id 'Adubbz'
-                            name 'Adubbz'
-                            roles { role 'developer' }
-                        }
-                        developer {
-                            id 'Amnet'
-                            name 'Amnet'
-                            roles { role 'developer' }
-                        }
-                        developer {
-                            id 'Forstride'
-                            name 'Forstride'
-                            roles { role 'developer' }
-                        }
-                        developer {
-                            id 'ted80'
-                            name 'ted80'
-                            roles { role 'developer' }
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
